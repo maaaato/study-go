@@ -2,7 +2,7 @@
 If you monitor a specified log and detect a specific character, the EC2 tag is updated.
 
 # Write the setting in TOML.
-Set TagStartValue to TagName when finding the character specified in SearchStart from TailFile.
+Set TagStartValue to TagName when finding the character specified in SearchStart from TailFile.  
 Set TagEndValue to TagName when finding the character specified in SearchEnd from TailFile.  
 
 ## Example for TOML.
