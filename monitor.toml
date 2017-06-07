@@ -1,0 +1,8 @@
+TailFile = "./example.log"
+PostionFile = "./monitor.pos"
+SearchStart = "aaaaa"
+SearchEnd = "bbbbb"
+TagName = "cw_alert"
+TagStartValue = "off"
+TagEndValue = "on"
+Delay = 3000

@@ -1,0 +1,14 @@
+[Unit]
+Description=monitor log
+
+[Service]
+Type=simple
+ExecStart=/usr/local/src/monitor
+ExecStop=/bin/kill -s QUIT $MAINPID
+Restart=always
+
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
