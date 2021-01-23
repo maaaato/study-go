@@ -1,34 +1,35 @@
 package main
 
 import (
-	"./config"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"config/config"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hpcloud/tail"
-	"io/ioutil"
-	"log"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var (
 	svc        *ec2.EC2
 	sess       *session.Session
-	instanceId string
+	instanceID string
 	metadata   *ec2metadata.EC2Metadata
 )
 
-// Set instance-id.
-func GetInstanceId() error {
+// GetInstanceID Set instance-id.
+func GetInstanceID() error {
 	var err error
-	instanceId, err = metadata.GetMetadata("instance-id")
+	instanceID, err = metadata.GetMetadata("instance-id")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -36,13 +37,13 @@ func GetInstanceId() error {
 	return nil
 }
 
-// Get region.
+// GetRegion Get region.
 func GetRegion() (string, error) {
 	region, err := metadata.Region()
 	return region, err
 }
 
-// Get file size.
+// GetFileSize Get file size.
 func GetFileSize(filepath string) (int64, error) {
 	f, err := os.Open(filepath)
 	defer f.Close()
@@ -56,8 +57,8 @@ func GetFileSize(filepath string) (int64, error) {
 
 }
 
-// Get postion.
-func GetPostion(filepath string) int64 {
+// Getposition Get position.
+func Getposition(filepath string) int64 {
 	_, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		log.Printf(err.Error())
@@ -65,14 +66,14 @@ func GetPostion(filepath string) int64 {
 	return 0
 }
 
-// Check file.
+// IsExist Check file.
 func IsExist(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
 }
 
-// Return postion file size.
-func ReadPostion(path string) (int64, error) {
+// Readposition Return position file size.
+func Readposition(path string) (int64, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Printf(err.Error())
@@ -91,9 +92,9 @@ func ReadPostion(path string) (int64, error) {
 	return val, err
 }
 
-// Create postion file.
-func CreatePostionFile(postion int, filename string) error {
-	val := strconv.Itoa(postion)
+// CreatePositionFile Create position file.
+func CreatePositionFile(position int, filename string) error {
+	val := strconv.Itoa(position)
 	err := ioutil.WriteFile(filename, []byte(val), os.ModePerm)
 	if err != nil {
 		return err
@@ -101,15 +102,16 @@ func CreatePostionFile(postion int, filename string) error {
 	return nil
 }
 
+// GetOffset
 func GetOffset(conf *config.ConfToml) (int64, error) {
-	if IsExist(conf.PostionFile) {
-		return ReadPostion(conf.PostionFile)
+	if IsExist(conf.PositionFile) {
+		return Readposition(conf.PositionFile)
 	} else {
 		return GetFileSize(conf.TailFile)
 	}
 }
 
-// Create(Update) EC2 tag.
+// CreateTags Create(Update) EC2 tag.
 func CreateTags(resources string, key string, name string) {
 	params := &ec2.CreateTagsInput{
 		Resources: []*string{
@@ -147,7 +149,7 @@ func awsInit() {
 		Region:      &region,
 	}
 
-	if err != GetInstanceId() {
+	if err != GetInstanceID() {
 		fmt.Println()
 	}
 	svc = ec2.New(sess, conf)
@@ -155,15 +157,13 @@ func awsInit() {
 
 func main() {
 
-	awsInit()
+	//awsInit()
 
 	conf, err := config.New()
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	fmt.Println(reflect.TypeOf(conf.Delay))
 
 	offset, err := GetOffset(conf)
 	if err != nil {
@@ -184,28 +184,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	postion, err := GetFileSize(conf.TailFile)
+	position, err := GetFileSize(conf.TailFile)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
+	fmt.Println("aaaaaaaa")
 	for line := range t.Lines {
-		postion += int64(len(line.Text)) + 1
+		position += int64(len(line.Text)) + 1
 		fmt.Println(line.Text)
-		fmt.Println("postion :             ", postion)
+		//fmt.Println("position :             ", position)
 
-		if err := CreatePostionFile(int(postion), conf.PostionFile); err != nil {
-			fmt.Println("Not Created: %s [filename=%s]\n", err.Error(), conf.PostionFile)
+		if err := CreatePositionFile(int(position), conf.PositionFile); err != nil {
+			fmt.Println("Not Created: %s [filename=%s]\n", err.Error(), conf.PositionFile)
 			os.Exit(2)
 		}
 
 		if strings.Index(line.Text, conf.SearchStart) != -1 {
+			// If the SearchStart found in the line, Update the tags by TagStartValue.
 			time.Sleep(conf.Delay)
-			CreateTags(instanceId, conf.TagName, conf.TagStartValue)
+			fmt.Println("start")
+			//CreateTags(instanceId, conf.TagName, conf.TagStartValue)
 		} else if strings.Index(line.Text, conf.SearchEnd) != -1 {
+			// If the SearchEnd found in the line, Update the tags by TagEndValue.
 			time.Sleep(conf.Delay)
-			CreateTags(instanceId, conf.TagName, conf.TagEndValue)
+			fmt.Println("end")
+			//CreateTags(instanceId, conf.TagName, conf.TagEndValue)
 		}
 	}
 }

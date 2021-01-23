@@ -2,15 +2,18 @@ package config
 
 import (
 	"errors"
-	"github.com/BurntSushi/toml"
+	"fmt"
 	"time"
+
+	"github.com/BurntSushi/toml"
 )
 
-const ConfigPath = "/usr/local/src/monitor.toml"
+const ConfigPath = "monitor.toml"
 
+// ConfigToml Struct
 type ConfToml struct {
 	TailFile      string        `toml:"TailFile"`
-	PostionFile   string        `toml:"PostionFile"`
+	PositionFile  string        `toml:"PositionFile"`
 	SearchStart   string        `toml:"SearchStart"`
 	SearchEnd     string        `toml:"SearchEnd"`
 	TagName       string        `toml:"TagName"`
@@ -19,30 +22,30 @@ type ConfToml struct {
 	Delay         time.Duration `toml:"Delay"`
 }
 
-// Read config.
+// New Read config.
 func New() (*ConfToml, error) {
-	c := &ConfToml{}
-	_, err := toml.DecodeFile(ConfigPath, c)
+	var c ConfToml
+	_, err := toml.DecodeFile(ConfigPath, &c)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	// check error.
 	if c.TailFile == "" {
-		return c, errors.New("please set tailfile.")
+		return &c, errors.New("please set tailfile.")
 	}
 
-	if c.PostionFile == "" {
-		return c, errors.New("please set postion file.")
+	if c.PositionFile == "" {
+		return &c, errors.New("please set postion file.")
 	}
 
 	if c.SearchStart == "" {
-		return c, errors.New("please set search start.")
+		return &c, errors.New("please set search start.")
 	}
 
 	if c.SearchEnd == "" {
-		return c, errors.New("please set search end.")
+		return &c, errors.New("please set search end.")
 	}
 
-	return c, nil
+	return &c, nil
 }
