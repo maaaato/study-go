@@ -196,7 +196,7 @@ func main() {
 		//fmt.Println("position :             ", position)
 
 		if err := CreatePositionFile(int(position), conf.PositionFile); err != nil {
-			fmt.Println("Not Created: %s [filename=%s]\n", err.Error(), conf.PositionFile)
+			fmt.Printf("Not Created: %s [filename=%s]\n", err.Error(), conf.PositionFile)
 			os.Exit(2)
 		}
 
