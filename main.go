@@ -159,7 +159,7 @@ func main() {
 
 	//awsInit()
 
-	conf, err := config.New()
+	conf, err := config.LoadConfig("monitor.toml")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

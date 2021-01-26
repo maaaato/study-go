@@ -23,29 +23,29 @@ type ConfToml struct {
 }
 
 // New Read config.
-func New() (*ConfToml, error) {
-	var c ConfToml
-	_, err := toml.DecodeFile(ConfigPath, &c)
+func LoadConfig(p string) (*ConfToml, error) {
+	c := new(ConfToml)
+	_, err := toml.DecodeFile(p, c)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// check error.
 	if c.TailFile == "" {
-		return &c, errors.New("please set tailfile.")
+		return c, errors.New("please set tailfile")
 	}
 
 	if c.PositionFile == "" {
-		return &c, errors.New("please set postion file.")
+		return c, errors.New("please set position file")
 	}
 
 	if c.SearchStart == "" {
-		return &c, errors.New("please set search start.")
+		return c, errors.New("please set search start")
 	}
 
 	if c.SearchEnd == "" {
-		return &c, errors.New("please set search end.")
+		return c, errors.New("please set search end")
 	}
 
-	return &c, nil
+	return c, nil
 }
