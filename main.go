@@ -12,7 +12,6 @@ import (
 	"config/config"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -130,29 +129,6 @@ func CreateTags(resources string, key string, name string) {
 	if err != nil {
 		log.Printf(err.Error())
 	}
-}
-
-// Setting aws parameter.
-func awsInit() {
-	sess = session.New()
-	metadata = ec2metadata.New(sess)
-	cred := ec2rolecreds.NewCredentialsWithClient(metadata)
-
-	region, err := GetRegion()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	conf := &aws.Config{
-		Credentials: cred,
-		Region:      &region,
-	}
-
-	if err != GetInstanceID() {
-		fmt.Println()
-	}
-	svc = ec2.New(sess, conf)
 }
 
 func main() {
