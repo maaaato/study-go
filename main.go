@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"config/config"
+	"github.com/maaaato/monitor/config"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
