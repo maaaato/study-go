@@ -1,11 +1,11 @@
-package main
+package logsample
 
 import (
 	"fmt"
 	"log"
 )
 
-func main() {
+func logs() {
 	fmt.Println("out")
 	log.Println("err")
 }
