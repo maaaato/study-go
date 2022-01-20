@@ -1,13 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
 	"path/filepath"
 )
 
 func main() {
-	err := filepath.Walk("demo", func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk("image", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -20,6 +23,23 @@ func main() {
 
 		// fmt.Printf("path: %#v\n", path)
 		fmt.Printf("ext: %#v\n", filepath.Ext(info.Name()))
+		ext := filepath.Ext(info.Name())
+		if ext != "" {
+			fmt.Println("image/" + info.Name())
+			exFile, err := os.Open("./image/" + info.Name())
+			img, _, Err := image.Decode(exFile)
+			if Err != nil {
+				return errors.New("Decode失敗")
+			}
+			f, err := os.Create("./")
+			if err != nil {
+				return errors.New("オープン失敗")
+			}
+			err = png.Encode(f, img)
+			if err != nil {
+				return errors.New("encode失敗")
+			}
+		}
 		return nil
 	})
 
