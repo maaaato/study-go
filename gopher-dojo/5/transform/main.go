@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	_ "image/jpeg"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -26,12 +27,16 @@ func main() {
 		ext := filepath.Ext(info.Name())
 		if ext != "" {
 			fmt.Println("image/" + info.Name())
-			exFile, err := os.Open("./image/" + info.Name())
+			exFile, err := os.Open("image/" + info.Name())
+			if err != nil {
+				fmt.Println(err)
+			}
 			img, _, Err := image.Decode(exFile)
 			if Err != nil {
-				return errors.New("Decode失敗")
+				fmt.Println(Err)
+				return errors.New("decode失敗")
 			}
-			f, err := os.Create("./")
+			f, err := os.Create(info.Name() + ".png")
 			if err != nil {
 				return errors.New("オープン失敗")
 			}
