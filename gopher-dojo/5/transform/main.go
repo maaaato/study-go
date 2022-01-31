@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	convert.Do()
+	convert.Execute()
 }
