@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	convert.Execute()
+	c := &convert.ConvertCmd{}
+	c.Execute()
 }

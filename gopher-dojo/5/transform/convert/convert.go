@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	_ "image/jpeg"
+	"image/jpeg"
 	"image/png"
 	"io"
 	"os"
@@ -17,25 +17,31 @@ type convert interface {
 	Decode(io.Reader)
 }
 
-type ConvertSetting struct {
-	srcdir  string
-	destdir string
-	baseExt string
-	convExt string
+type Config struct {
+	SrcDIR  string
+	DestDIR string
+	BaseExt string
+	ConvExt string
 }
 type ConvertCmd struct {
-	Setting ConvertSetting
+	Setting *Config
 }
 
-func (c ConvertCmd) Decode(r io.Reader) (image.Image, string, error) {
+func (c *ConvertCmd) Decode(r io.Reader) (image.Image, string, error) {
 	return image.Decode(r)
 }
 
-// func init() {
-// 	flag.BoolVar(&n, "n", false, "Output line")
-// }
+func (c *ConvertCmd) Encode(w io.Writer, img image.Image) error {
+	switch c.Setting.ConvExt {
+	case "png":
+		return png.Encode(w, img)
+	case "jpeg":
+		return jpeg.Encode(w, img, &jpeg.Options{Quality: 100})
+	}
+	return nil
+}
 
-func Execute() {
+func (c *ConvertCmd) Execute() error {
 	var (
 		srcdir  = flag.String("srcdir", "./", "string flag")
 		destdir = flag.String("destdir", "./dest", "string flag")
@@ -44,60 +50,41 @@ func Execute() {
 	)
 	flag.Parse()
 
-	cs := ConvertSetting{
-		srcdir:  *srcdir,
-		destdir: *destdir,
-		baseExt: *baseExt,
-		convExt: *convExt,
+	c.Setting = &Config{
+		SrcDIR:  *srcdir,
+		DestDIR: *destdir,
+		BaseExt: *baseExt,
+		ConvExt: *convExt,
 	}
 
-	cc := ConvertCmd{
-		Setting: cs,
-	}
-	// if err := rootCmd.Execute(); err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-	err := filepath.Walk(cc.Setting.srcdir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(c.Setting.SrcDIR, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// 特定のディレクトリを無視したい場合は `filepath.SkipDir` を返す
-		// 例えば `AAA` という名前のディレクトリを無視する場合は以下のようにする
-		// if info.IsDir() && info.Name() == "AAA" {
-		// 	return filepath.SkipDir
-		// }
-
-		// fmt.Printf("path: %#v\n", path)
-		fmt.Printf("ext: %#v\n", filepath.Ext(info.Name()))
 		ext := filepath.Ext(info.Name())
 		if ext != "" {
 			n := info.Name()
 			baseName := n[:len(n)-len(filepath.Ext(n))]
-			exFile, err := os.Open(cc.Setting.srcdir + info.Name())
+			exFile, err := os.Open(c.Setting.SrcDIR + info.Name())
 			if err != nil {
 				fmt.Println(err)
 			}
-			// img, _, Err := image.Decode(exFile)
-			img, _, Err := cc.Decode(exFile)
+			img, _, Err := c.Decode(exFile)
 			if Err != nil {
-				fmt.Println(Err)
-				return errors.New("decode失敗")
+				return errors.New("Failed decode.")
 			}
-			f, err := os.Create(baseName + ".png")
+			f, err := os.Create(fmt.Sprintf("%s.%s", baseName, c.Setting.ConvExt))
 			if err != nil {
-				return errors.New("オープン失敗")
+				return errors.New("Failed Open file.")
 			}
-			err = png.Encode(f, img)
+			err = c.Encode(f, img)
 			if err != nil {
-				return errors.New("encode失敗")
+				return errors.New("Failed encode.")
 			}
 		}
 		return nil
 	})
 
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
