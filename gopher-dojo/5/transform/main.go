@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/maaaato/study-go/gopher-dojo/5/transform/convert"
+	"github.com/maaaato/study-go/gopher-dojo/5/transform/cmd"
 )
 
 func main() {
-	c := &convert.ConvertCmd{}
-	c.Execute()
+	cmd.Execute()
 }

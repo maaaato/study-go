@@ -2,7 +2,6 @@ package convert
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -23,15 +22,15 @@ type Config struct {
 	BaseExt string
 	ConvExt string
 }
-type ConvertCmd struct {
+type Convert struct {
 	Setting *Config
 }
 
-func (c *ConvertCmd) Decode(r io.Reader) (image.Image, string, error) {
+func (c *Convert) Decode(r io.Reader) (image.Image, string, error) {
 	return image.Decode(r)
 }
 
-func (c *ConvertCmd) Encode(w io.Writer, img image.Image) error {
+func (c *Convert) Encode(w io.Writer, img image.Image) error {
 	switch c.Setting.ConvExt {
 	case "png":
 		return png.Encode(w, img)
@@ -41,21 +40,7 @@ func (c *ConvertCmd) Encode(w io.Writer, img image.Image) error {
 	return nil
 }
 
-func (c *ConvertCmd) Execute() error {
-	var (
-		srcdir  = flag.String("srcdir", "./", "string flag")
-		destdir = flag.String("destdir", "./dest", "string flag")
-		baseExt = flag.String("baseExt", "jpeg", "string flag")
-		convExt = flag.String("convExt", "png", "string flag")
-	)
-	flag.Parse()
-
-	c.Setting = &Config{
-		SrcDIR:  *srcdir,
-		DestDIR: *destdir,
-		BaseExt: *baseExt,
-		ConvExt: *convExt,
-	}
+func (c *Convert) Execute() error {
 
 	err := filepath.Walk(c.Setting.SrcDIR, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
