@@ -14,8 +14,34 @@ import (
 )
 
 func main() {
+	authorizedKeysBytes, err := ioutil.ReadFile("authorized_keys")
+	if err != nil {
+		log.Fatalf("Failed to load authorized_keys, err: %v", err)
+	}
+
+	authorizedKeysMap := map[string]bool{}
+	for len(authorizedKeysBytes) > 0 {
+		pubKey, _, _, rest, err := ssh.ParseAuthorizedKey(authorizedKeysBytes)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		authorizedKeysMap[string(pubKey.Marshal())] = true
+		authorizedKeysBytes = rest
+	}
 	serverConfig := &ssh.ServerConfig{
-		NoClientAuth: true,
+		// Remove to disable public key auth.
+		PublicKeyCallback: func(c ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, error) {
+			if authorizedKeysMap[string(pubKey.Marshal())] {
+				return &ssh.Permissions{
+					// Record the public key used for authentication.
+					Extensions: map[string]string{
+						"pubkey-fp": ssh.FingerprintSHA256(pubKey),
+					},
+				}, nil
+			}
+			return nil, fmt.Errorf("unknown public key for %q", c.User())
+		},
 	}
 
 	privateKeyBytes, err := ioutil.ReadFile("id_rsa_example")
@@ -49,7 +75,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to accept on 2222 (%s)", err)
 		}
-
+		log.Print("accept...")
 		sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, serverConfig)
 		if err != nil {
 			log.Fatalf("Failed to handshake (%s)", err)
