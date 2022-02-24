@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/creack/pty"
+	proxyproto "github.com/pires/go-proxyproto"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -60,6 +61,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen on 2222 (%s)", err)
 	}
+	proxyListener := &proxyproto.Listener{Listener: listener}
+	defer proxyListener.Close()
 	log.Print("Listening on 2222...")
 
 	go func() {
@@ -71,7 +74,7 @@ func main() {
 	}()
 
 	for {
-		tcpConn, err := listener.Accept()
+		tcpConn, err := proxyListener.Accept()
 		if err != nil {
 			log.Fatalf("Failed to accept on 2222 (%s)", err)
 		}

@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/creack/pty v1.1.17
+	github.com/pires/go-proxyproto v0.6.1
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 )
 
